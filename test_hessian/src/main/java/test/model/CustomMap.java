@@ -15,25 +15,9 @@
  * limitations under the License.
  */
 
-package hessian
+package test.model;
 
-import (
-	"testing"
-)
+import java.util.HashMap;
 
-func TestEncNull(t *testing.T) {
-	e := NewEncoder()
-	e.Encode(nil)
-	if e.Buffer() == nil {
-		t.Fail()
-	}
-	t.Logf("nil enc result:%s\n", string(e.buffer))
-}
-
-func TestNull(t *testing.T) {
-	testDecodeFramework(t, "replyNull", nil)
-}
-
-func TestNulEncode(t *testing.T) {
-	testJavaDecode(t, "argNull", nil)
+public class CustomMap<K,V> extends HashMap<K,V> {
 }

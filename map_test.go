@@ -21,6 +21,11 @@ import (
 	"testing"
 )
 
+import (
+	big "github.com/dubbogo/gost/math/big"
+	"github.com/stretchr/testify/assert"
+)
+
 func TestEncUntypedMap(t *testing.T) {
 	var (
 		m   map[interface{}]interface{}
@@ -81,11 +86,11 @@ func TestMap(t *testing.T) {
 	testDecodeFramework(t, "replyTypedMap_0", map[interface{}]interface{}{})
 	testDecodeFramework(t, "replyTypedMap_1", map[interface{}]interface{}{"a": int32(0)})
 	testDecodeFramework(t, "replyTypedMap_2", map[interface{}]interface{}{int32(0): "a", int32(1): "b"})
-	//testDecodeFramework(t, "replyTypedMap_3", []interface{}{})
+	// testDecodeFramework(t, "replyTypedMap_3", []interface{}{})
 	testDecodeFramework(t, "replyUntypedMap_0", map[interface{}]interface{}{})
 	testDecodeFramework(t, "replyUntypedMap_1", map[interface{}]interface{}{"a": int32(0)})
 	testDecodeFramework(t, "replyUntypedMap_2", map[interface{}]interface{}{int32(0): "a", int32(1): "b"})
-	//testDecodeFramework(t, "replyTypedMap_3", []interface{}{})
+	// testDecodeFramework(t, "replyTypedMap_3", []interface{}{})
 }
 
 func TestMapEncode(t *testing.T) {
@@ -97,6 +102,23 @@ func TestMapEncode(t *testing.T) {
 	testJavaDecode(t, "argUntypedMap_2", map[interface{}]interface{}{int32(0): "a", int32(1): "b"})
 }
 
+func TestCustomMapRefMap(t *testing.T) {
+	r, e := decodeJavaResponse("customReplyMapRefMap", "", true)
+	if e != nil {
+		t.Errorf("%s: decode fail with error: %v", "customReplyMapRefMap", e)
+		return
+	}
+	res := r.(map[interface{}]interface{})
+	assert.Equal(t, int32(1), res["a"])
+	assert.Equal(t, int32(2), res["b"])
+	assert.Equal(t, res, res["self"])
+}
+
+type customMapObject struct {
+	Int int32
+	S   string
+}
+
 func TestCustomMap(t *testing.T) {
 	testDecodeFramework(t, "customReplyMap", map[interface{}]interface{}{"a": int32(1), "b": int32(2)})
 
@@ -106,4 +128,45 @@ func TestCustomMap(t *testing.T) {
 	}
 	testDecodeFramework(t, "customReplyMapInMap", mapInMap)
 	testDecodeFramework(t, "customReplyMapInMapJsonObject", mapInMap)
+
+	b3 := &big.Decimal{}
+	_ = b3.FromString("33.33")
+	b3.Value = "33.33"
+
+	b5 := &big.Decimal{}
+	_ = b5.FromString("55.55")
+	b5.Value = "55.55"
+
+	multipleTypeMap := map[interface{}]interface{}{
+		"m1": map[interface{}]interface{}{"a": int32(1), "b": int32(2)},
+		"m2": map[interface{}]interface{}{int64(3): "c", int64(4): "d"},
+		"m3": map[interface{}]interface{}{int32(3): b3, int32(5): b5},
+	}
+
+	testDecodeFramework(t, "customReplyMultipleTypeMap", multipleTypeMap)
+
+	RegisterPOJOMapping("test.model.CustomMap", &customMapObject{})
+
+	listMapListMap := []interface{}{
+
+		map[interface{}]interface{}{
+			"a": int32(1),
+			"b": int32(2),
+			"items": []interface{}{
+				b5,
+				"hello",
+				int32(123),
+				customMapObject{
+					Int: 456,
+					S:   "string",
+				},
+			},
+		},
+		customMapObject{
+			Int: 789,
+			S:   "string2",
+		},
+	}
+
+	testDecodeFramework(t, "customReplyListMapListMap", listMapListMap)
 }
